@@ -1,62 +1,65 @@
 import React from 'react';
 
 interface BrandLogoProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   showSubtitle?: boolean;
+  variant?: 'full' | 'symbol' | 'compact';
 }
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({ 
   size = 'md',
-  showSubtitle = true 
+  showSubtitle = true,
+  variant = 'compact'
 }) => {
-  const iconSize = size === 'sm' ? 32 : size === 'md' ? 44 : 58;
-  const titleSize = size === 'sm' ? 'text-lg' : size === 'md' ? 'text-2xl' : 'text-3xl';
+  // Configurações de altura da imagem conforme o tamanho
+  const imgHeight = {
+    sm: 'h-8 sm:h-9',
+    md: 'h-11 sm:h-12',
+    lg: 'h-16 sm:h-18',
+    xl: 'h-24 sm:h-28',
+  }[size];
 
-  return (
-    <div className="flex items-center gap-3">
-      {/* Borboleta estilizada Di' Linhas em traço contínuo */}
-      <div className="relative flex items-center justify-center p-1.5 rounded-xl bg-gradient-to-br from-[#F9E8B8]/60 to-[#F9E8B8]/20 border border-[#B85324]/20 shadow-sm">
-        <svg 
-          width={iconSize} 
-          height={iconSize} 
-          viewBox="0 0 100 100" 
-          fill="none" 
-          stroke="#B85324" 
-          strokeWidth="2.5" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-          className="transition-transform duration-300 hover:scale-105"
-        >
-          {/* Antenas */}
-          <path d="M50 20 C 50 15, 46 10, 42 12 C 38 14, 40 20, 50 30" />
-          <path d="M50 20 C 50 15, 54 10, 58 12 C 62 14, 60 20, 50 30" />
-          {/* Asa Superior Esquerda */}
-          <path d="M50 32 C 35 15, 10 20, 12 45 C 13 60, 32 62, 50 68" />
-          {/* Asa Inferior Esquerda */}
-          <path d="M50 68 C 30 70, 20 85, 30 92 C 40 96, 48 85, 50 78" />
-          {/* Asa Superior Direita */}
-          <path d="M50 32 C 65 15, 90 20, 88 45 C 87 60, 68 62, 50 68" />
-          {/* Asa Inferior Direita */}
-          <path d="M50 68 C 70 70, 80 85, 70 92 C 60 96, 52 85, 50 78" />
-          {/* Corpo central */}
-          <path d="M50 28 L50 82" stroke="#4A2013" strokeWidth="3" strokeLinecap="round" />
-          <circle cx="50" cy="26" r="3" fill="#4A2013" />
-        </svg>
-      </div>
-
-      <div className="flex flex-col">
-        <div className="flex items-center gap-1.5">
-          <span className={`font-brand font-bold tracking-wider text-[#4A2013] ${titleSize}`}>
-            DI' LINHAS
-          </span>
-          <span className="w-1.5 h-1.5 rounded-full bg-[#B85324]"></span>
-        </div>
+  if (variant === 'full') {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2">
+        <img
+          src="/logo-dilinhas.png"
+          alt="Di' Linhas - Projetos Criativos"
+          className={`${imgHeight} w-auto object-contain drop-shadow-sm transition-transform duration-300 hover:scale-105`}
+        />
         {showSubtitle && (
-          <span className="text-[10px] sm:text-xs font-semibold tracking-widest uppercase text-[#B85324]">
-            Projetos Criativos • Lean MES
+          <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase text-[#B85324] bg-[#F9E8B8]/60 px-3 py-0.5 rounded-full border border-[#B85324]/20">
+            Sistema Lean MES & ERP Fabril
           </span>
         )}
       </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      {/* Imagem Oficial Di' Linhas */}
+      <div className="relative flex items-center justify-center p-1 rounded-2xl bg-white/80 border border-[#B85324]/20 shadow-sm overflow-hidden">
+        <img
+          src="/logo-dilinhas.png"
+          alt="Di' Linhas - Projetos Criativos"
+          className={`${imgHeight} w-auto object-contain transition-transform duration-300 hover:scale-105`}
+        />
+      </div>
+
+      {showSubtitle && (
+        <div className="hidden sm:flex flex-col">
+          <div className="flex items-center gap-1.5">
+            <span className="font-brand font-black tracking-wider text-[#4A2013] text-lg lg:text-xl">
+              DI' LINHAS
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#B85324]"></span>
+          </div>
+          <span className="text-[10px] font-bold tracking-widest uppercase text-[#B85324]">
+            Projetos Criativos • Lean MES
+          </span>
+        </div>
+      )}
     </div>
   );
 };

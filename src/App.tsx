@@ -31,19 +31,31 @@ const AppContent: React.FC = () => {
       </div>
 
       {/* Footer Industrial Di' Linhas */}
-      <footer className="mt-12 border-t border-[#B85324]/15 bg-white py-6 px-4 text-center text-xs text-[#4A2013]/60">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 font-medium">
-            <span className="font-brand font-bold text-[#4A2013]">DI' LINHAS</span>
-            <span>—</span>
-            <span>Sistema de Produção Enxuta (Lean MES & ERP Industrial)</span>
+      <footer className="mt-12 border-t border-[#B85324]/15 bg-white py-6 px-4 text-center text-xs text-[#4A2013]/70">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <img 
+              src="/logo-dilinhas.png" 
+              alt="Di' Linhas Logo" 
+              className="h-9 w-auto object-contain" 
+            />
+            <div className="text-left">
+              <span className="font-brand font-black text-[#4A2013] text-sm block">DI' LINHAS</span>
+              <span className="text-[10px] text-[#B85324] font-semibold uppercase tracking-wider">Projetos Criativos • Lean MES</span>
+            </div>
           </div>
-          <div className="flex items-center gap-4 text-[11px]">
-            <span>Metodologia Lean 4 Etapas</span>
+          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] font-medium">
+            <span className="px-2.5 py-1 rounded-full bg-[#FAF6EE] border border-[#B85324]/20 text-[#4A2013]">
+              Metodologia Lean 4 Etapas
+            </span>
             <span>•</span>
-            <span>BOM Dinâmica & Taxa Horária Absorvida</span>
+            <span className="px-2.5 py-1 rounded-full bg-[#FAF6EE] border border-[#B85324]/20 text-[#4A2013]">
+              BOM Dinâmica & Taxa Horária Absorvida
+            </span>
             <span>•</span>
-            <span>Supabase Cloud JIT</span>
+            <span className="px-2.5 py-1 rounded-full bg-[#FAF6EE] border border-[#B85324]/20 text-[#4A2013]">
+              Supabase Cloud JIT
+            </span>
           </div>
         </div>
       </footer>
