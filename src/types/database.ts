@@ -1,12 +1,27 @@
-export type UnidadeMedida = 'm' | 'm2' | 'un' | 'kg' | 'par' | 'rolo' | 'cm';
+export type UnidadeMedida = 'm' | 'm2' | 'un' | 'kg' | 'par' | 'rolo' | 'cm' | 'cone';
 
 export type CategoriaProduto = 'Bolsas' | 'Mochilas' | 'Carteiras' | 'Acessórios';
+
+export type CategoriaInsumo = 
+  | 'Tecidos e Lonas' 
+  | 'Couros e Sintéticos' 
+  | 'Aviamentos e Zíperes' 
+  | 'Metais e Ferragens' 
+  | 'Linhas e Fios' 
+  | 'Forros' 
+  | 'Estruturadores e Espumas' 
+  | 'Embalagens e Tags'
+  | 'Diversos';
 
 export type StatusOP = 'CRIADA' | 'EM_PRODUCAO' | 'PAUSADA' | 'CONCLUIDA' | 'CANCELADA';
 
 export type StatusEtapa = 'PENDENTE' | 'EM_ANDAMENTO' | 'PAUSADA' | 'CONCLUIDA';
 
 export type NomeEtapa = 'Corte' | 'Costura' | 'Montagem' | 'Acabamento e Controle de Qualidade';
+
+export type EspecialidadeOperador = 'Corte' | 'Costura' | 'Montagem' | 'Qualidade' | 'Polivalente';
+
+export type CategoriaDespesa = 'Ocupacao' | 'Utilidades' | 'Manutencao' | 'MaoDeObraIndireta' | 'Administrativo';
 
 export type MotivoPausa = 
   | 'Falta de Insumo'
@@ -20,6 +35,44 @@ export type MotivoPausa =
 export type TipoMovimentoEstoque = 'ENTRADA' | 'SAIDA';
 export type TipoItemEstoque = 'INSUMO' | 'PRODUTO_ACABADO';
 
+export interface Fornecedor {
+  id: string;
+  razao_social: string;
+  nome_fantasia: string;
+  cnpj_cpf?: string;
+  contato_nome?: string;
+  whatsapp?: string;
+  email?: string;
+  cidade?: string;
+  uf?: string;
+  lead_time_dias: number;
+  condicao_pagamento?: string;
+  categorias_fornecidas?: string[];
+  ativo: boolean;
+  criado_em?: string;
+}
+
+export interface Operador {
+  id: string;
+  nome: string;
+  apelido: string;
+  especialidade: EspecialidadeOperador;
+  turno: 'Manhã' | 'Tarde' | 'Integral';
+  foto_url?: string;
+  ativo: boolean;
+  criado_em?: string;
+}
+
+export interface DespesaOperacional {
+  id: string;
+  mes_referencia: string; // Ex: '2026-08', '2026-09', '2026-10'
+  categoria: CategoriaDespesa;
+  descricao: string;
+  valor: number;
+  pago: boolean;
+  criado_em?: string;
+}
+
 export interface Insumo {
   id: string;
   sku: string;
@@ -27,11 +80,32 @@ export interface Insumo {
   unidade_medida: UnidadeMedida;
   custo_unitario: number;
   estoque_minimo: number;
+  estoque_maximo?: number;
   saldo_atual: number;
   fornecedor?: string;
-  categoria?: string;
+  fornecedor_id?: string;
+  categoria?: CategoriaInsumo;
+  imagem_url?: string;
+  localizacao_almoxarifado?: string;
+  codigo_fornecedor?: string;
+  lead_time_dias?: number;
+  cor_pantone?: string;
   criado_em?: string;
   atualizado_em?: string;
+}
+
+export interface DimensoesProduto {
+  largura_cm: number;
+  altura_cm: number;
+  profundidade_cm: number;
+  peso_gramas?: number;
+}
+
+export interface TemposPorEtapa {
+  corte_min: number;
+  costura_min: number;
+  montagem_min: number;
+  acabamento_min: number;
 }
 
 export interface ProdutoAcabado {
@@ -39,12 +113,17 @@ export interface ProdutoAcabado {
   sku: string;
   nome: string;
   categoria: CategoriaProduto;
+  colecao?: string;
   descricao?: string;
   preco_venda: number;
   margem_alvo: number; // Percentual (ex: 38.00%)
   tempo_padrao_total: number; // Em minutos
+  tempos_por_etapa?: TemposPorEtapa;
   saldo_estoque: number;
   imagem_url?: string;
+  galeria_fotos?: string[];
+  dimensoes?: DimensoesProduto;
+  instrucoes_costura?: string;
   criado_em?: string;
   atualizado_em?: string;
   itens_ficha?: FichaTecnicaItemComInsumo[];
@@ -88,6 +167,7 @@ export interface OrdemProducao {
   custo_mo_orcado: number;
   custo_mo_real: number;
   operador_responsavel?: string;
+  operador_id?: string;
   notas_kaizen?: string;
   criado_em?: string;
   atualizado_em?: string;
@@ -113,6 +193,7 @@ export interface OpEtapa {
   tempo_real_segundos: number;
   status: StatusEtapa;
   operador_nome?: string;
+  operador_id?: string;
   inicio_etapa?: string;
   fim_etapa?: string;
   aprovado_qualidade?: boolean;

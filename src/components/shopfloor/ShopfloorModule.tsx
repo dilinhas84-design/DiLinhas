@@ -15,9 +15,9 @@ import {
   Sparkles, 
   DollarSign, 
   AlertCircle,
-  FileText,
-  ChevronRight,
-  ShieldCheck,
+  Package,
+  Ruler,
+  Info,
   Flame
 } from 'lucide-react';
 import { PauseModal } from './PauseModal';
@@ -29,6 +29,7 @@ export const ShopfloorModule: React.FC = () => {
   const { 
     ordensProducao, 
     taxaHorariaMO, 
+    operadores,
     iniciarEtapa, 
     pausarEtapa, 
     retomarEtapa, 
@@ -36,12 +37,10 @@ export const ShopfloorModule: React.FC = () => {
     salvarNotasKaizen 
   } = useLeanSystem();
 
-  // Filtrar OPs ativas (em produção, pausadas ou criadas)
   const opsAtivas = useMemo(() => {
     return ordensProducao.filter((op) => op.status !== 'CANCELADA');
   }, [ordensProducao]);
 
-  // OP selecionada para o operador atual
   const [opSelecionadaId, setOpSelecionadaId] = useState<string>(() => {
     const ativa = ordensProducao.find((o) => o.status === 'EM_PRODUCAO');
     return ativa?.id || ordensProducao[0]?.id || '';
@@ -51,8 +50,20 @@ export const ShopfloorModule: React.FC = () => {
     return ordensProducao.find((o) => o.id === opSelecionadaId) || ordensProducao[0];
   }, [ordensProducao, opSelecionadaId]);
 
-  // Nome do Operador no posto touch
-  const [operadorNome, setOperadorNome] = useState<string>('Juliana Silva');
+  // Operador atual selecionado (inicializa com o primeiro operador cadastrado)
+  const [operadorSelecionadoId, setOperadorSelecionadoId] = useState<string>(() => {
+    return operadores[0]?.id || '';
+  });
+
+  const operadorAtual = useMemo(() => {
+    return operadores.find(o => o.id === operadorSelecionadoId) || operadores[0];
+  }, [operadores, operadorSelecionadoId]);
+
+  const [operadorNomeCustom, setOperadorNomeCustom] = useState<string>(() => {
+    return operadorAtual?.nome || 'Operador da Linha';
+  });
+
+  const nomeOperadorEfetivo = operadorAtual?.nome || operadorNomeCustom;
 
   // Modais de apoio
   const [modalPausaAberto, setModalPausaAberto] = useState(false);
@@ -60,10 +71,8 @@ export const ShopfloorModule: React.FC = () => {
   const [modalRelatorioAberto, setModalRelatorioAberto] = useState(false);
   const [etapaAcao, setEtapaAcao] = useState<OpEtapa | null>(null);
 
-  // Anotações Kaizen locais
   const [kaizenTexto, setKaizenTexto] = useState(opAtual?.notas_kaizen || '');
 
-  // Atualizar texto do Kaizen quando mudar OP
   React.useEffect(() => {
     if (opAtual) {
       setKaizenTexto(opAtual.notas_kaizen || '');
@@ -82,11 +91,9 @@ export const ShopfloorModule: React.FC = () => {
     );
   }
 
-  // Encontrar etapa em andamento ou a primeira pendente
   const etapaEmAndamento = opAtual.etapas?.find((e) => e.status === 'EM_ANDAMENTO' || e.status === 'PAUSADA');
   const etapaAtiva = etapaEmAndamento || opAtual.etapas?.find((e) => e.status === 'PENDENTE') || opAtual.etapas?.[0];
 
-  // Análise Andon da etapa ativa
   const analiseAndon = etapaAtiva
     ? analisarDesvioEtapa(
         etapaAtiva.tempo_padrao_min,
@@ -96,13 +103,12 @@ export const ShopfloorModule: React.FC = () => {
       )
     : null;
 
-  // Handlers dos botões touch gigantes
   const handleIniciarOuRetomar = () => {
     if (!etapaAtiva) return;
     if (etapaAtiva.status === 'PAUSADA') {
       retomarEtapa(opAtual.id, etapaAtiva.id);
     } else {
-      iniciarEtapa(opAtual.id, etapaAtiva.id, operadorNome);
+      iniciarEtapa(opAtual.id, etapaAtiva.id, nomeOperadorEfetivo, operadorAtual?.id);
     }
   };
 
@@ -124,7 +130,6 @@ export const ShopfloorModule: React.FC = () => {
     if (!etapaAtiva) return;
     setEtapaAcao(etapaAtiva);
 
-    // Se for a etapa de Acabamento e Controle de Qualidade, abre o checklist
     if (etapaAtiva.etapa_nome === 'Acabamento e Controle de Qualidade') {
       setModalQualidadeAberto(true);
     } else {
@@ -146,50 +151,65 @@ export const ShopfloorModule: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      {/* Barra de Seleção de OP & Operador do Posto */}
+      {/* Barra de Seleção de OP & Seletor Visual de Operadores */}
       <div className="bg-white p-4 rounded-3xl border border-[#B85324]/20 shadow-soft-warm flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-[#FAF6EE] border border-[#B85324]/30 rounded-2xl text-[#B85324]">
             <Flame className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs font-bold text-[#4A2013]/60 uppercase tracking-wider block">
-              Ordem de Produção Selecionada
-            </span>
-            <div className="flex items-center gap-2">
-              <select
-                value={opAtual.id}
-                onChange={(e) => setOpSelecionadaId(e.target.value)}
-                className="font-bold text-lg text-[#4A2013] bg-transparent focus:outline-none cursor-pointer pr-4"
-              >
-                {opsAtivas.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.codigo_op} — {o.quantidade}x {o.produto?.nome} ({o.status})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Operador Touch Input */}
-        <div className="flex items-center gap-3 bg-[#FAF6EE] px-4 py-2 rounded-2xl border border-[#B85324]/15">
-          <User className="w-5 h-5 text-[#B85324]" />
-          <div>
             <span className="text-[10px] font-bold text-[#4A2013]/60 uppercase tracking-wider block">
-              Operador Atual
+              Ordem de Produção Ativa
             </span>
-            <input
-              type="text"
-              value={operadorNome}
-              onChange={(e) => setOperadorNome(e.target.value)}
-              className="text-sm font-bold text-[#4A2013] bg-transparent focus:outline-none w-32 sm:w-40"
-              placeholder="Nome do Operador"
-            />
+            <select
+              value={opAtual.id}
+              onChange={(e) => setOpSelecionadaId(e.target.value)}
+              className="font-bold text-base sm:text-lg text-[#4A2013] bg-transparent focus:outline-none cursor-pointer pr-4"
+            >
+              {opsAtivas.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.codigo_op} — {o.quantidade}x {o.produto?.nome} ({o.status})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Botão para Relatório de Custos */}
+        {/* Seletor Visual de Operador Touch */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-[#4A2013]/60 uppercase tracking-wider hidden sm:inline">
+            Operador no Posto:
+          </span>
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#FAF6EE] border border-[#B85324]/15">
+            {operadores.map((op) => {
+              const isSelected = op.id === operadorAtual?.id;
+              return (
+                <button
+                  key={op.id}
+                  onClick={() => {
+                    setOperadorSelecionadoId(op.id);
+                    setOperadorNomeCustom(op.nome);
+                  }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#B85324] text-white shadow-sm scale-102'
+                      : 'text-[#4A2013] hover:bg-white'
+                  }`}
+                  title={`${op.nome} (${op.especialidade})`}
+                >
+                  {op.foto_url ? (
+                    <img src={op.foto_url} alt={op.nome} className="w-5 h-5 rounded-full object-cover" />
+                  ) : (
+                    <User className="w-3.5 h-3.5" />
+                  )}
+                  <span>{op.apelido}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Botão de Relatório de Custos */}
         <button
           onClick={() => setModalRelatorioAberto(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#4A2013] hover:bg-[#32150C] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
@@ -201,14 +221,12 @@ export const ShopfloorModule: React.FC = () => {
 
       {/* Esteira Visual das 4 Etapas Padronizadas (Lean Flow) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {(opAtual.etapas || []).map((etapa, idx) => {
-          const isAtiva = etapa.id === etapaAtiva?.id;
+        {(opAtual.etapas || []).map((etapa) => {
           const isConcluida = etapa.status === 'CONCLUIDA';
           const isAndamento = etapa.status === 'EM_ANDAMENTO';
           const isPausada = etapa.status === 'PAUSADA';
 
           const tempoPadraoEtapaSeg = Math.round((etapa.tempo_padrao_min * 60) * opAtual.quantidade);
-          const desvioEtapa = etapa.tempo_real_segundos - tempoPadraoEtapaSeg;
           const isGargalo = etapa.tempo_real_segundos > (tempoPadraoEtapaSeg * 1.2);
 
           return (
@@ -263,49 +281,90 @@ export const ShopfloorModule: React.FC = () => {
         })}
       </div>
 
-      {/* Painel Operacional Touch Principal (Tablet Optimized) */}
+      {/* Painel Operacional Touch Principal com FOTO DO MODELO */}
       <div className="bg-white rounded-3xl border-2 border-[#B85324]/30 shadow-elevated-warm p-6 lg:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#4A2013]/10">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-xl bg-[#F9E8B8] text-[#4A2013] font-black text-xs uppercase tracking-wider">
-                Posto de Trabalho Touch
-              </span>
-              <span className="text-xs text-[#4A2013]/60">
-                Peça: <strong className="text-[#4A2013]">{opAtual.produto?.nome}</strong> ({opAtual.quantidade} un)
-              </span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center pb-6 border-b border-[#4A2013]/10">
+          {/* Foto da Peça em Destaque Visual */}
+          <div className="lg:col-span-3 flex sm:flex-row lg:flex-col items-center gap-4">
+            <div className="w-32 h-32 lg:w-full lg:h-44 rounded-2xl overflow-hidden border-2 border-[#B85324]/30 shadow-sm bg-[#FAF6EE] shrink-0">
+              {opAtual.produto?.imagem_url ? (
+                <img
+                  src={opAtual.produto.imagem_url}
+                  alt={opAtual.produto.nome}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-[#4A2013]/40">
+                  <Package className="w-10 h-10 mb-1" />
+                  <span className="text-[10px]">Sem foto</span>
+                </div>
+              )}
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-[#4A2013] mt-2">
-              {etapaAtiva?.etapa_nome || 'Selecione uma etapa'}
-            </h2>
+
+            <div className="text-left lg:text-center">
+              <span className="font-mono text-xs font-bold text-[#B85324] block">{opAtual.produto?.sku}</span>
+              <strong className="text-sm font-black text-[#4A2013] block line-clamp-1">{opAtual.produto?.nome}</strong>
+              <span className="text-xs text-[#4A2013]/70">Lote: <strong>{opAtual.quantidade} peças</strong></span>
+              {opAtual.produto?.dimensoes && (
+                <span className="text-[10px] text-[#4A2013]/60 block mt-0.5">
+                  {opAtual.produto.dimensoes.largura_cm}×{opAtual.produto.dimensoes.altura_cm}×{opAtual.produto.dimensoes.profundidade_cm} cm
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Andon Status Badge */}
-          {analiseAndon && (
-            <div
-              className={`px-4 py-2.5 rounded-2xl border-2 flex items-center gap-3 ${
-                analiseAndon.status === 'GARGALO_CRITICO'
-                  ? 'bg-[#FEE2E2] border-[#991B1B] text-[#991B1B]'
-                  : analiseAndon.status === 'ATENCAO'
-                  ? 'bg-[#FEF3C7] border-[#D97706] text-[#D97706]'
-                  : 'bg-[#E8F5EE] border-[#2D7A4C] text-[#2D7A4C]'
-              }`}
-            >
-              {analiseAndon.status === 'GARGALO_CRITICO' ? (
-                <AlertTriangle className="w-6 h-6 animate-bounce" />
-              ) : analiseAndon.status === 'ATENCAO' ? (
-                <Clock className="w-6 h-6" />
-              ) : (
-                <CheckCircle2 className="w-6 h-6" />
-              )}
+          {/* Etapa Atual & Alerta Andon */}
+          <div className="lg:col-span-9 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <span className="text-[11px] font-black uppercase tracking-wider block">
-                  Andon Lean: {analiseAndon.status.replace('_', ' ')}
+                <span className="px-3 py-1 rounded-xl bg-[#F9E8B8] text-[#4A2013] font-black text-xs uppercase tracking-wider">
+                  Posto de Trabalho Touch
                 </span>
-                <span className="text-xs font-semibold">{analiseAndon.mensagem}</span>
+                <h2 className="text-2xl sm:text-3xl font-black text-[#4A2013] mt-1.5">
+                  {etapaAtiva?.etapa_nome || 'Selecione uma etapa'}
+                </h2>
+                <span className="text-xs text-[#4A2013]/70 block mt-0.5">
+                  Operador responsável: <strong className="text-[#B85324]">{nomeOperadorEfetivo}</strong>
+                </span>
               </div>
+
+              {analiseAndon && (
+                <div
+                  className={`px-4 py-2.5 rounded-2xl border-2 flex items-center gap-3 ${
+                    analiseAndon.status === 'GARGALO_CRITICO'
+                      ? 'bg-[#FEE2E2] border-[#991B1B] text-[#991B1B]'
+                      : analiseAndon.status === 'ATENCAO'
+                      ? 'bg-[#FEF3C7] border-[#D97706] text-[#D97706]'
+                      : 'bg-[#E8F5EE] border-[#2D7A4C] text-[#2D7A4C]'
+                  }`}
+                >
+                  {analiseAndon.status === 'GARGALO_CRITICO' ? (
+                    <AlertTriangle className="w-6 h-6 animate-bounce" />
+                  ) : analiseAndon.status === 'ATENCAO' ? (
+                    <Clock className="w-6 h-6" />
+                  ) : (
+                    <CheckCircle2 className="w-6 h-6" />
+                  )}
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider block">
+                      Andon: {analiseAndon.status.replace('_', ' ')}
+                    </span>
+                    <span className="text-xs font-semibold">{analiseAndon.mensagem}</span>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Instruções Técnicas de Costura */}
+            {opAtual.produto?.instrucoes_costura && (
+              <div className="p-3 rounded-2xl bg-[#FAF6EE] border border-[#B85324]/20 flex items-start gap-2 text-xs text-[#4A2013]">
+                <Info className="w-4 h-4 text-[#B85324] shrink-0 mt-0.5" />
+                <span>
+                  <strong>Atenção Técnica:</strong> {opAtual.produto.instrucoes_costura}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Display Gigante do Cronômetro Líquido */}
@@ -337,7 +396,6 @@ export const ShopfloorModule: React.FC = () => {
 
         {/* BOTÕES GIGANTES DE AÇÃO TOUCH */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Botão 1: INICIAR / RETOMAR */}
           <button
             type="button"
             onClick={handleIniciarOuRetomar}
@@ -352,7 +410,6 @@ export const ShopfloorModule: React.FC = () => {
             <span>{etapaAtiva?.status === 'PAUSADA' ? 'RETOMAR LINHA' : 'INICIAR ETAPA'}</span>
           </button>
 
-          {/* Botão 2: PAUSAR (com seleção de motivo) */}
           <button
             type="button"
             onClick={handlePausar}
@@ -367,7 +424,6 @@ export const ShopfloorModule: React.FC = () => {
             <span>PAUSAR (ANDON)</span>
           </button>
 
-          {/* Botão 3: CONCLUIR */}
           <button
             type="button"
             onClick={handleConcluir}
@@ -383,7 +439,7 @@ export const ShopfloorModule: React.FC = () => {
           </button>
         </div>
 
-        {/* Campo de Anotações Kaizen / Melhoria Contínua */}
+        {/* Anotações Kaizen */}
         <div className="mt-8 pt-6 border-t border-[#4A2013]/10">
           <div className="flex items-center justify-between mb-2">
             <label className="text-xs font-bold text-[#4A2013] flex items-center gap-2">
@@ -410,7 +466,7 @@ export const ShopfloorModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Modais Integrados */}
+      {/* Modais */}
       {etapaAcao && (
         <PauseModal
           isOpen={modalPausaAberto}

@@ -8,13 +8,12 @@ import {
   Calculator, 
   Boxes, 
   Settings, 
-  CheckCircle2, 
-  AlertTriangle,
   RefreshCw,
-  Database
+  Database,
+  FolderPlus
 } from 'lucide-react';
 
-export type TabType = 'shopfloor' | 'orders' | 'pricing' | 'inventory' | 'settings';
+export type TabType = 'shopfloor' | 'orders' | 'pricing' | 'inventory' | 'registrations' | 'settings';
 
 interface NavbarProps {
   activeTab: TabType;
@@ -35,9 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     recarregarDados 
   } = useLeanSystem();
 
-  // Métricas rápidas de topo
   const opsEmProducao = ordensProducao.filter((o) => o.status === 'EM_PRODUCAO').length;
-  const opsConcluidas = ordensProducao.filter((o) => o.status === 'CONCLUIDA').length;
 
   return (
     <header className="sticky top-0 z-30 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#B85324]/15 shadow-sm">
@@ -55,7 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button 
                 onClick={onOpenSettingsModal}
                 className="font-mono font-bold text-[#B85324] hover:underline cursor-pointer"
-                title="Clique para ajustar despesas e dias úteis"
+                title="Clique para ajustar parâmetros da taxa horária"
               >
                 {formatarMoeda(taxaHorariaMO)}/h
               </button>
@@ -63,7 +60,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Supabase status badge */}
             <div 
               className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
                 isOnlineSupabase 
@@ -79,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={recarregarDados}
               disabled={isLoading}
-              className="p-1 rounded-md text-[#4A2013]/60 hover:text-[#B85324] hover:bg-[#FAF6EE] transition-colors"
+              className="p-1 rounded-md text-[#4A2013]/60 hover:text-[#B85324] hover:bg-[#FAF6EE] transition-colors cursor-pointer"
               title="Recarregar dados"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -93,19 +89,19 @@ export const Navbar: React.FC<NavbarProps> = ({
         <BrandLogo size="md" />
 
         {/* Abas Centrais */}
-        <nav className="hidden md:flex items-center gap-1.5 bg-[#FAF6EE] p-1.5 rounded-2xl border border-[#B85324]/15">
+        <nav className="hidden lg:flex items-center gap-1 bg-[#FAF6EE] p-1.5 rounded-2xl border border-[#B85324]/15">
           <button
             onClick={() => onSelectTab('shopfloor')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
               activeTab === 'shopfloor'
                 ? 'bg-[#B85324] text-white shadow-touch-active'
                 : 'text-[#4A2013] hover:text-[#B85324] hover:bg-[#F9E8B8]/40'
             }`}
           >
             <PlayCircle className="w-4 h-4" />
-            <span>Chão de Fábrica (MES)</span>
+            <span>Chão de Fábrica</span>
             {opsEmProducao > 0 && (
-              <span className={`px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
                 activeTab === 'shopfloor' ? 'bg-white text-[#B85324]' : 'bg-[#B85324] text-white'
               }`}>
                 {opsEmProducao}
@@ -115,38 +111,50 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => onSelectTab('orders')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
               activeTab === 'orders'
                 ? 'bg-[#B85324] text-white shadow-touch-active'
                 : 'text-[#4A2013] hover:text-[#B85324] hover:bg-[#F9E8B8]/40'
             }`}
           >
             <Layers className="w-4 h-4" />
-            <span>Ordens de Produção</span>
+            <span>Ordens (OPs)</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTab('registrations')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+              activeTab === 'registrations'
+                ? 'bg-[#B85324] text-white shadow-touch-active'
+                : 'text-[#4A2013] hover:text-[#B85324] hover:bg-[#F9E8B8]/40'
+            }`}
+          >
+            <FolderPlus className="w-4 h-4" />
+            <span>Cadastros & Imagens</span>
           </button>
 
           <button
             onClick={() => onSelectTab('pricing')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
               activeTab === 'pricing'
                 ? 'bg-[#B85324] text-white shadow-touch-active'
                 : 'text-[#4A2013] hover:text-[#B85324] hover:bg-[#F9E8B8]/40'
             }`}
           >
             <Calculator className="w-4 h-4" />
-            <span>Precificação & Ficha Técnica</span>
+            <span>Precificação & BOM</span>
           </button>
 
           <button
             onClick={() => onSelectTab('inventory')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
               activeTab === 'inventory'
                 ? 'bg-[#B85324] text-white shadow-touch-active'
                 : 'text-[#4A2013] hover:text-[#B85324] hover:bg-[#F9E8B8]/40'
             }`}
           >
             <Boxes className="w-4 h-4" />
-            <span>Estoque & Kardex (JIT)</span>
+            <span>Estoque & Kardex</span>
           </button>
         </nav>
 
@@ -154,50 +162,59 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={onOpenSettingsModal}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#B85324]/20 text-[#4A2013] hover:bg-[#F9E8B8]/40 transition-all text-xs font-semibold"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#B85324]/20 text-[#4A2013] hover:bg-[#F9E8B8]/40 transition-all text-xs font-semibold cursor-pointer"
           >
             <Settings className="w-4 h-4 text-[#B85324]" />
-            <span className="hidden lg:inline">Taxa Horária</span>
+            <span className="hidden xl:inline">Parâmetros MO</span>
           </button>
         </div>
       </div>
 
-      {/* Navegação Mobile / Tablet Inferior fixada */}
-      <div className="md:hidden border-t border-[#B85324]/10 bg-white grid grid-cols-4 gap-1 p-1">
+      {/* Navegação Mobile / Tablet Inferior */}
+      <div className="lg:hidden border-t border-[#B85324]/10 bg-white grid grid-cols-5 gap-1 p-1">
         <button
           onClick={() => onSelectTab('shopfloor')}
-          className={`flex flex-col items-center py-2 px-1 rounded-lg text-xs font-medium ${
+          className={`flex flex-col items-center py-2 px-1 rounded-lg text-[10px] font-medium ${
             activeTab === 'shopfloor' ? 'bg-[#B85324] text-white font-bold' : 'text-[#4A2013]'
           }`}
         >
-          <PlayCircle className="w-5 h-5 mb-0.5" />
+          <PlayCircle className="w-4 h-4 mb-0.5" />
           <span>Fábrica</span>
         </button>
         <button
           onClick={() => onSelectTab('orders')}
-          className={`flex flex-col items-center py-2 px-1 rounded-lg text-xs font-medium ${
+          className={`flex flex-col items-center py-2 px-1 rounded-lg text-[10px] font-medium ${
             activeTab === 'orders' ? 'bg-[#B85324] text-white font-bold' : 'text-[#4A2013]'
           }`}
         >
-          <Layers className="w-5 h-5 mb-0.5" />
+          <Layers className="w-4 h-4 mb-0.5" />
           <span>OPs</span>
         </button>
         <button
+          onClick={() => onSelectTab('registrations')}
+          className={`flex flex-col items-center py-2 px-1 rounded-lg text-[10px] font-medium ${
+            activeTab === 'registrations' ? 'bg-[#B85324] text-white font-bold' : 'text-[#4A2013]'
+          }`}
+        >
+          <FolderPlus className="w-4 h-4 mb-0.5" />
+          <span>Cadastros</span>
+        </button>
+        <button
           onClick={() => onSelectTab('pricing')}
-          className={`flex flex-col items-center py-2 px-1 rounded-lg text-xs font-medium ${
+          className={`flex flex-col items-center py-2 px-1 rounded-lg text-[10px] font-medium ${
             activeTab === 'pricing' ? 'bg-[#B85324] text-white font-bold' : 'text-[#4A2013]'
           }`}
         >
-          <Calculator className="w-5 h-5 mb-0.5" />
+          <Calculator className="w-4 h-4 mb-0.5" />
           <span>BOM</span>
         </button>
         <button
           onClick={() => onSelectTab('inventory')}
-          className={`flex flex-col items-center py-2 px-1 rounded-lg text-xs font-medium ${
+          className={`flex flex-col items-center py-2 px-1 rounded-lg text-[10px] font-medium ${
             activeTab === 'inventory' ? 'bg-[#B85324] text-white font-bold' : 'text-[#4A2013]'
           }`}
         >
-          <Boxes className="w-5 h-5 mb-0.5" />
+          <Boxes className="w-4 h-4 mb-0.5" />
           <span>Estoque</span>
         </button>
       </div>
