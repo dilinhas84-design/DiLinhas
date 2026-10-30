@@ -65,7 +65,7 @@ export interface Operador {
 
 export interface DespesaOperacional {
   id: string;
-  mes_referencia: string; // Ex: '2026-08', '2026-09', '2026-10'
+  mes_referencia: string;
   categoria: CategoriaDespesa;
   descricao: string;
   valor: number;
@@ -108,6 +108,20 @@ export interface TemposPorEtapa {
   acabamento_min: number;
 }
 
+export interface ParteMolde {
+  id: string;
+  nome: string; // Ex: 'Espelho Frontal', 'Fole Lateral', 'Alça de Ombro'
+  largura_cm: number;
+  altura_cm: number;
+  quantidade_corte: number; // Ex: 1x, 2x, 4x
+  material_insumo_id?: string;
+  material_nome?: string;
+  area_unitaria_cm2: number;
+  area_total_cm2: number;
+  perimetro_cm?: number;
+  observacao?: string;
+}
+
 export interface ProdutoAcabado {
   id: string;
   sku: string;
@@ -116,14 +130,17 @@ export interface ProdutoAcabado {
   colecao?: string;
   descricao?: string;
   preco_venda: number;
-  margem_alvo: number; // Percentual (ex: 38.00%)
-  tempo_padrao_total: number; // Em minutos
+  margem_alvo: number;
+  tempo_padrao_total: number;
   tempos_por_etapa?: TemposPorEtapa;
   saldo_estoque: number;
   imagem_url?: string;
   galeria_fotos?: string[];
   dimensoes?: DimensoesProduto;
   instrucoes_costura?: string;
+  arquivo_molde_pdf_url?: string;
+  partes_molde?: ParteMolde[];
+  croqui_desenho_svg?: string;
   criado_em?: string;
   atualizado_em?: string;
   itens_ficha?: FichaTecnicaItemComInsumo[];
@@ -134,7 +151,7 @@ export interface FichaTecnicaItem {
   produto_id: string;
   insumo_id: string;
   quantidade_consumo: number;
-  percentual_perda: number; // Ex: 5.00%
+  percentual_perda: number;
   etapa_consumo?: NomeEtapa;
   criado_em?: string;
 }
@@ -162,7 +179,7 @@ export interface OrdemProducao {
   etapa_atual: NomeEtapa;
   data_inicio?: string;
   data_conclusao?: string;
-  tempo_total_real: number; // Segundos líquidos trabalhados
+  tempo_total_real: number;
   custo_total_real: number;
   custo_mo_orcado: number;
   custo_mo_real: number;

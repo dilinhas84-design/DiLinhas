@@ -18,11 +18,13 @@ import {
   Package,
   Ruler,
   Info,
-  Flame
+  Flame,
+  Scissors
 } from 'lucide-react';
 import { PauseModal } from './PauseModal';
 import { QualityChecklistModal } from './QualityChecklistModal';
 import { CostVarianceReportModal } from './CostVarianceReportModal';
+import { PatternStudioModal } from '../patterns/PatternStudioModal';
 import { MotivoPausa, ChecklistQualidade, OpEtapa } from '../../types/database';
 
 export const ShopfloorModule: React.FC = () => {
@@ -30,12 +32,15 @@ export const ShopfloorModule: React.FC = () => {
     ordensProducao, 
     taxaHorariaMO, 
     operadores,
+    insumos,
     iniciarEtapa, 
     pausarEtapa, 
     retomarEtapa, 
     concluirEtapa, 
     salvarNotasKaizen 
   } = useLeanSystem();
+
+  const [modalMoldeAberto, setModalMoldeAberto] = useState(false);
 
   const opsAtivas = useMemo(() => {
     return ordensProducao.filter((op) => op.status !== 'CANCELADA');
@@ -310,6 +315,17 @@ export const ShopfloorModule: React.FC = () => {
                   {opAtual.produto.dimensoes.largura_cm}×{opAtual.produto.dimensoes.altura_cm}×{opAtual.produto.dimensoes.profundidade_cm} cm
                 </span>
               )}
+
+              {opAtual.produto && (
+                <button
+                  type="button"
+                  onClick={() => setModalMoldeAberto(true)}
+                  className="mt-2.5 w-full py-1.5 px-3 rounded-xl bg-[#FAF6EE] hover:bg-[#F9E8B8] border border-[#B85324]/30 text-[#4A2013] text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                >
+                  <Scissors className="w-3.5 h-3.5 text-[#B85324]" />
+                  <span>Ver Moldes CAD & PDF</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -499,6 +515,16 @@ export const ShopfloorModule: React.FC = () => {
         taxaHorariaMO={taxaHorariaMO}
         onClose={() => setModalRelatorioAberto(false)}
       />
+
+      {/* Modal de Consulta e Corte de Moldes CAD da Peça */}
+      {modalMoldeAberto && opAtual.produto && (
+        <PatternStudioModal
+          isOpen={modalMoldeAberto}
+          onClose={() => setModalMoldeAberto(false)}
+          produto={opAtual.produto}
+          insumos={insumos}
+        />
+      )}
     </div>
   );
 };

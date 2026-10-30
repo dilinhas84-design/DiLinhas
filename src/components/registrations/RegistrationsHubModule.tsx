@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLeanSystem } from '../../context/LeanSystemContext';
 import { formatarMoeda } from '../../lib/leanPricingEngine';
 import { ImageUploadZone } from '../ui/ImageUploadZone';
+import { PatternStudioModal } from '../patterns/PatternStudioModal';
 import { 
   FolderPlus, 
   Package, 
@@ -22,6 +23,8 @@ import {
   AlertTriangle,
   Phone,
   Mail,
+  Scissors,
+  FileText,
   X
 } from 'lucide-react';
 import { 
@@ -34,7 +37,8 @@ import {
   CategoriaInsumo,
   UnidadeMedida,
   EspecialidadeOperador,
-  CategoriaDespesa
+  CategoriaDespesa,
+  ParteMolde
 } from '../../types/database';
 
 export const RegistrationsHubModule: React.FC = () => {
@@ -78,6 +82,24 @@ export const RegistrationsHubModule: React.FC = () => {
   const [operadorEditando, setOperadorEditando] = useState<Operador | null>(null);
 
   const [modalDespesaAberto, setModalDespesaAberto] = useState(false);
+
+  // Modal do Estúdio de Modelagem Visual & Moldes CAD
+  const [modalMoldeAberto, setModalMoldeAberto] = useState(false);
+  const [produtoSelecionadoMolde, setProdutoSelecionadoMolde] = useState<ProdutoAcabado | null>(null);
+
+  const abrirEstudioMolde = (prod: ProdutoAcabado) => {
+    setProdutoSelecionadoMolde(prod);
+    setModalMoldeAberto(true);
+  };
+
+  const handleSalvarPartesMolde = (partes: ParteMolde[], pdfUrl?: string) => {
+    if (!produtoSelecionadoMolde) return;
+    atualizarProduto(produtoSelecionadoMolde.id, {
+      partes_molde: partes,
+      arquivo_molde_pdf_url: pdfUrl || produtoSelecionadoMolde.arquivo_molde_pdf_url
+    });
+    setModalMoldeAberto(false);
+  };
 
   // ==========================================
   // ESTADOS DO FORMULÁRIO DE PRODUTO
@@ -642,22 +664,41 @@ export const RegistrationsHubModule: React.FC = () => {
               </div>
 
               {/* Botões de Ação */}
-              <div className="p-4 pt-0 flex items-center justify-end gap-2">
+              <div className="p-4 pt-0 flex flex-wrap items-center justify-between gap-2 border-t border-[#4A2013]/5 mt-3 pt-3">
                 <button
-                  onClick={() => abrirModalEditarProduto(prod)}
-                  className="p-2 rounded-xl border border-[#4A2013]/20 text-[#4A2013] hover:text-[#B85324] hover:bg-[#FAF6EE] text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                  onClick={() => abrirEstudioMolde(prod)}
+                  className="px-3 py-1.5 rounded-xl bg-[#FAF6EE] hover:bg-[#F9E8B8]/70 border border-[#B85324]/30 text-[#4A2013] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                  title="Abrir Estúdio CAD de Modelagem e Cut List"
                 >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>Editar</span>
+                  <Scissors className="w-3.5 h-3.5 text-[#B85324]" />
+                  <span>Moldes & Cut List</span>
+                  {prod.partes_molde && prod.partes_molde.length > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-[#B85324] text-white text-[9px] flex items-center justify-center font-bold">
+                      {prod.partes_molde.length}
+                    </span>
+                  )}
+                  {prod.arquivo_molde_pdf_url && (
+                    <FileText className="w-3.5 h-3.5 text-[#2D7A4C]" title="PDF anexado" />
+                  )}
                 </button>
-                <button
-                  onClick={() => {
-                    if (confirm(`Deseja remover o modelo "${prod.nome}"?`)) removerProduto(prod.id);
-                  }}
-                  className="p-2 rounded-xl text-red-500 hover:bg-red-50 text-xs font-semibold cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => abrirModalEditarProduto(prod)}
+                    className="p-2 rounded-xl border border-[#4A2013]/20 text-[#4A2013] hover:text-[#B85324] hover:bg-[#FAF6EE] text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Editar</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Deseja remover o modelo "${prod.nome}"?`)) removerProduto(prod.id);
+                    }}
+                    className="p-2 rounded-xl text-red-500 hover:bg-red-50 text-xs font-semibold cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -1660,6 +1701,17 @@ export const RegistrationsHubModule: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* MODAL ESTÚDIO VISUAL DE MODELAGEM CAD & CUT LIST */}
+      {modalMoldeAberto && produtoSelecionadoMolde && (
+        <PatternStudioModal
+          isOpen={modalMoldeAberto}
+          onClose={() => setModalMoldeAberto(false)}
+          produto={produtoSelecionadoMolde}
+          insumos={insumos}
+          onSalvar={handleSalvarPartesMolde}
+        />
       )}
     </div>
   );
